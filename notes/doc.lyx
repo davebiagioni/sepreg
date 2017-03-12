@@ -1,0 +1,549 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass amsart
+\use_default_options true
+\begin_modules
+theorems-ams
+eqs-within-sections
+figs-within-sections
+\end_modules
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\ul}{\underline{\,\,}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This self-contained library 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Formula ${\tt sepreg}$
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ allows you to construct a separated representation to approximate scattered
+ data.
+ It requires the use of a specific data structure devised for this purpose.
+ Example of its usage can be found in the 
+\begin_inset Formula ${\tt examples}$
+\end_inset
+
+ directory.
+\end_layout
+
+\begin_layout Subsection*
+Data structure
+\end_layout
+
+\begin_layout Standard
+Everything of interest happens within the the MATLAB structure array that
+ is referred to hereafter as 
+\begin_inset Formula ${\tt f}$
+\end_inset
+
+.
+ This structure array contains the given data, various problem parameters
+ and, upon running ALS, the constructed approximation.
+ 
+\end_layout
+
+\begin_layout Standard
+The specific fields appearing in 
+\begin_inset Formula ${\tt f}$
+\end_inset
+
+ depend somewhat on whether cross validation (CV) is being used.
+ We use 
+\begin_inset Formula $N_{train}$
+\end_inset
+
+ to denote the number of training samples, and 
+\begin_inset Formula $N_{test}$
+\end_inset
+
+ for the number of test samples.
+ If no CV is used, 
+\begin_inset Formula $N_{train}=N$
+\end_inset
+
+, the total number of samples.
+ 
+\end_layout
+
+\begin_layout Standard
+The fields of 
+\begin_inset Formula ${\tt f}$
+\end_inset
+
+ are:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.ndim}$
+\end_inset
+
+: the number of dimensions in the data
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.ord}$
+\end_inset
+
+: vector of 
+\begin_inset Formula ${\tt f.ndim}$
+\end_inset
+
+ values, giving the order (cardinality) of the basis in each direction.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.cv}$
+\end_inset
+
+: cross validation flag (
+\begin_inset Formula ${\tt true}$
+\end_inset
+
+ if using CV, 
+\begin_inset Formula ${\tt false}$
+\end_inset
+
+ otherwise).
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.X}$
+\end_inset
+
+: a field containing all 
+\begin_inset Formula $\mathbf{x}$
+\end_inset
+
+-data.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.X.train}$
+\end_inset
+
+: an 
+\begin_inset Formula $N_{train}\times{\tt f.ndim}$
+\end_inset
+
+ matrix.
+ If no CV is performed, all of the 
+\begin_inset Formula $\mathbf{x}$
+\end_inset
+
+-data goes here.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.X.test}$
+\end_inset
+
+: an 
+\begin_inset Formula $N_{test}\times{\tt f.ndim}$
+\end_inset
+
+ matrix of test 
+\begin_inset Formula $\mathbf{x}$
+\end_inset
+
+-data (required if 
+\begin_inset Formula ${\tt f.cv}={\tt true}$
+\end_inset
+
+).
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.y}$
+\end_inset
+
+: a field containing all 
+\begin_inset Formula $y$
+\end_inset
+
+-data.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.y.train}$
+\end_inset
+
+: a column vector of length 
+\begin_inset Formula $N_{train}$
+\end_inset
+
+.
+ If no CV is performed, all 
+\begin_inset Formula $y$
+\end_inset
+
+-data goes here.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.y.test}$
+\end_inset
+
+: a column vector of length 
+\begin_inset Formula $N_{test}$
+\end_inset
+
+, test 
+\begin_inset Formula $y$
+\end_inset
+
+-data (required if 
+\begin_inset Formula ${\tt f.cv}={\tt true}$
+\end_inset
+
+).
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.Phi}$
+\end_inset
+
+: a structure containing matrices of the basis function in each direction,
+ evaluated at the 
+\begin_inset Formula $\mathbf{x}$
+\end_inset
+
+-data.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.Phi.train}$
+\end_inset
+
+: cell of 
+\begin_inset Formula ${\tt f.ndim}$
+\end_inset
+
+ matrices of size 
+\begin_inset Formula $N_{train}\times{\tt f.ord(j)}$
+\end_inset
+
+, 
+\begin_inset Formula ${\tt j=1,\dots,f.ndim}$
+\end_inset
+
+, corresponding to the basis functions evaluated at the nodes in 
+\begin_inset Formula ${\tt f.X.train}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.Phi.test}$
+\end_inset
+
+: cell of 
+\begin_inset Formula ${\tt f.ndim}$
+\end_inset
+
+ matrices of size 
+\begin_inset Formula $N_{test}\times{\tt f.ord(j)}$
+\end_inset
+
+, 
+\begin_inset Formula ${\tt j=1,\dots,f.ndim}$
+\end_inset
+
+, corresponding to the basis functions evaluated at the nodes 
+\begin_inset Formula ${\tt f.X.test}$
+\end_inset
+
+ (required if 
+\begin_inset Formula ${\tt f.cv}={\tt true}$
+\end_inset
+
+).
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+You can check to make sure the data structure contains the necessary fields
+ by calling:
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+ 
+\begin_inset Formula ${\tt >}\,\,{\tt flag}={\tt check\ul data\ul struct(f)};$
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+The function will return 
+\begin_inset Formula ${\tt flag=0}$
+\end_inset
+
+ if there are problems, and various messages will be printed to help you
+ determine what they are.
+\end_layout
+
+\begin_layout Subsection*
+ALS
+\end_layout
+
+\begin_layout Standard
+You are now ready to run ALS (see 
+\begin_inset Formula ${\tt als.m}$
+\end_inset
+
+ for input parameters):
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Formula ${\tt [f,yhat,err]=als(f,tol,stucktol,maxit,r0,rmax,vrb);}$
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+This function augments 
+\begin_inset Formula ${\tt f}$
+\end_inset
+
+ with two 
+\begin_inset Formula $({\tt f.cv=false})$
+\end_inset
+
+ to three (
+\begin_inset Formula ${\tt f.cv=true}$
+\end_inset
+
+) additional fields: 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.seprep}:$
+\end_inset
+
+ a separated representation containing the linear basis coefficients
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.seprep.factors}$
+\end_inset
+
+: a cell containing 
+\begin_inset Formula ${\tt f.ndim}$
+\end_inset
+
+ factor matrices of the coefficients
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.seprep.svals}$
+\end_inset
+
+: a vector of 
+\begin_inset Formula $s$
+\end_inset
+
+-values
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.seprep.train}$
+\end_inset
+
+: a separated representation containing the values of the regression function
+ at the training nodes
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.seprep.train.factors}$
+\end_inset
+
+: a cell containing 
+\begin_inset Formula ${\tt f.ndim}$
+\end_inset
+
+ factor matrices of function values
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.seprep.train.svals}$
+\end_inset
+
+: a vector of 
+\begin_inset Formula $s$
+\end_inset
+
+-values
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula ${\tt f.seprep.test}$
+\end_inset
+
+: same as 
+\begin_inset Formula ${\tt f.seprep.train}$
+\end_inset
+
+, but for the test data (if 
+\begin_inset Formula ${\tt f.cv=true}$
+\end_inset
+
+) 
+\end_layout
+
+\begin_layout Standard
+It also returns:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt yhat}$
+\end_inset
+
+: a structure array with fields 
+\begin_inset Formula ${\tt y.train}$
+\end_inset
+
+ and 
+\begin_inset Formula ${\tt y.test}$
+\end_inset
+
+ (if 
+\begin_inset Formula ${\tt f.cv=true}$
+\end_inset
+
+), containing the fitted/predicted 
+\begin_inset Formula $y$
+\end_inset
+
+-values.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula ${\tt err}$
+\end_inset
+
+: a structure array with fields 
+\begin_inset Formula ${\tt err.train}$
+\end_inset
+
+ and 
+\begin_inset Formula ${\tt err.test}$
+\end_inset
+
+ (if 
+\begin_inset Formula ${\tt f.cv=true}$
+\end_inset
+
+), containing the ALS error at each iteration.
+\end_layout
+
+\begin_layout Standard
+If CV is being used, convergence is measured in terms of the prediction
+ error.
+\end_layout
+
+\end_body
+\end_document
